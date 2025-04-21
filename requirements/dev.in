@@ -1,0 +1,3 @@
+-r common.in
+
+debugpy # https://code.visualstudio.com/docs/containers/debug-python

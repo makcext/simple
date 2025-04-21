@@ -1,0 +1,59 @@
+{
+    "debug.allowBreakpointsEverywhere": true,
+    "editor.formatOnSave": true,
+    "editor.formatOnType": true,
+    "editor.tabSize": 2,
+    "editor.renderWhitespace": "boundary",
+    "editor.formatOnPaste": true,
+    "editor.foldingImportsByDefault": true,
+    "editor.folding": true,
+    "editor.codeActionsOnSave": {
+        // "source.organizeImports": "always"
+    },
+    // "editor.defaultFormatter": "ms-python.black-formatter",
+    "black-formatter.args": [
+        "--line-length",
+        "88"
+    ],
+    "files.trimTrailingWhitespace": true,
+    "files.trimFinalNewlines": true,
+    "files.insertFinalNewline": true,
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        "**/__pycache__": true,
+        "**/.pytest_cache": true,
+        "**/*.pyc": true
+    },
+    "python.linting.flake8Path": "flake8",
+    "python.linting.enabled": true,
+    "python.testing.pytestEnabled": true,
+    "python.sortImports.path": "isort",
+    "python.linting.flake8Enabled": true,
+    "python.defaultInterpreterPath": "python",
+    "workbench.editorAssociations": {
+        "*.svg": "hediet.vscode-drawio-text",
+    },
+    "pylint.args": [
+        "--enable=W0614",
+        "--disable=C0116",
+        "--disable=C0115",
+        "--disable=C0114",
+        "--disable=R0913",
+        "--disable=R0902",
+        "--disable=E1101"
+    ],
+    "python.linting.pylintArgs": [
+        "--load-plugins",
+        "pylint_django",
+        "--django-settings-module",
+        "simple.settings.development",
+    ],
+    "python.linting.flake8Args": [
+        "--max-line-length=88",
+        "--extend-ignore=E203"
+    ],
+}
