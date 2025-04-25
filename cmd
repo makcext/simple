@@ -3,7 +3,7 @@ case $1 in
     docker compose -f build/dev/docker-compose.yml -p simple build --no-cache
     ;;
   start)
-    docker compose -f build/dev/docker-compose.yml -p simple up -d simple simple-dramatiq
+    docker compose -f build/dev/docker-compose.yml -p simple up -d simple
     ;;
   restart)
     docker compose -f build/dev/docker-compose.yml -p simple down

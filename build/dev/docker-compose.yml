@@ -9,10 +9,10 @@ services:
     env_file: .env
     environment:
       - CONTAINER_NAME=simple
-      - RABBITMQ_URL=amqp://simple:simple@rabbitmq:5672
+      # - RABBITMQ_URL=amqp://simple:simple@rabbitmq:5672
     depends_on:
       - simple-db
-      - rabbitmq
+      # - rabbitmq
     ports:
       - "8000:8000" # Main app port
       - "3001:3001" # Debugger for main app
@@ -52,54 +52,54 @@ services:
       timeout: 10s
       retries: 3
 
-  simple-dramatiq:
-    image: simple:latest
-    container_name: simple-dramatiq
-    build:
-      context: ../..
-      dockerfile: build/dev/Dockerfile
-    restart: unless-stopped
-    env_file: .env
-    environment:
-      - CONTAINER_NAME=simple-dramatiq
-      - RABBITMQ_URL=amqp://simple:simple@rabbitmq:5672/?heartbeat=30
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-      simple-db:
-        condition: service_healthy
-    volumes:
-      - type : bind
-        source: ../../
-        target: /app
-    networks:
-      - simple-network
-    command:
-      - /bin/bash
-      - -c
-      - |
-        python manage.py migrate --settings=simple.settings.development
-        python manage.py rundramatiq --reload --settings=simple.settings.development --processes 1
+  # simple-dramatiq:
+  #   image: simple:latest
+  #   container_name: simple-dramatiq
+  #   build:
+  #     context: ../..
+  #     dockerfile: build/dev/Dockerfile
+  #   restart: unless-stopped
+  #   env_file: .env
+  #   environment:
+  #     - CONTAINER_NAME=simple-dramatiq
+  #     - RABBITMQ_URL=amqp://simple:simple@rabbitmq:5672/?heartbeat=30
+  #   depends_on:
+  #     rabbitmq:
+  #       condition: service_healthy
+  #     simple-db:
+  #       condition: service_healthy
+  #   volumes:
+  #     - type : bind
+  #       source: ../../
+  #       target: /app
+  #   networks:
+  #     - simple-network
+  #   command:
+  #     - /bin/bash
+  #     - -c
+  #     - |
+  #       python manage.py migrate --settings=simple.settings.development
+  #       python manage.py rundramatiq --reload --settings=simple.settings.development --processes 1
 
-  rabbitmq:
-    image: rabbitmq:4-management
-    container_name: simple-rabbitmq
-    restart: unless-stopped
-    environment:
-      - RABBITMQ_DEFAULT_USER=simple
-      - RABBITMQ_DEFAULT_PASS=simple
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    volumes:
-      - ../../volumes/rabbitmq:/var/lib/rabbitmq
-    networks:
-      - simple-network
-    healthcheck:
-      test: ["CMD", "rabbitmqctl", "status"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+  # rabbitmq:
+  #   image: rabbitmq:4-management
+  #   container_name: simple-rabbitmq
+  #   restart: unless-stopped
+  #   environment:
+  #     - RABBITMQ_DEFAULT_USER=simple
+  #     - RABBITMQ_DEFAULT_PASS=simple
+  #   ports:
+  #     - "5672:5672"
+  #     - "15672:15672"
+  #   volumes:
+  #     - ../../volumes/rabbitmq:/var/lib/rabbitmq
+  #   networks:
+  #     - simple-network
+  #   healthcheck:
+  #     test: ["CMD", "rabbitmqctl", "status"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
 
 networks:
   simple-network:
