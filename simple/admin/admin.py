@@ -65,8 +65,8 @@ class MovieCategoryAdmin(ImportExportModelAdmin):
     """Admin interface for movie categories."""
 
     resource_class = MovieCategoryResource
-    list_display = ("name", "slug", "is_active", "movies_count", "created_at")
-    list_filter = ("created_at", "updated_at")
+    list_display = ("name", "slug", "description", "movies_count", "is_active", "created_at")
+    list_filter = ("created_at", "updated_at", "is_active")
     search_fields = ("name", "slug", "description")
     prepopulated_fields = {"slug": ("name",)}
     readonly_fields = ("created_at", "updated_at")
@@ -93,13 +93,14 @@ class MovieAdmin(NumericFilterModelAdmin):
 
     list_display = (
         "title",
-        "release_date",
         "director",
+        "release_date",
+        "is_active",
         "display_duration",
         "display_rating",
         "display_category",
-        "is_active",
         "is_released",
+        "description",
     )
     list_filter = ("is_active",)
     search_fields = ("title", "original_title")
