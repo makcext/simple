@@ -2,9 +2,13 @@ from django.core.management.base import BaseCommand, CommandError
 
 # from django.conf import settings
 from django.db import transaction
-
-
 from django.contrib.auth import get_user_model
+
+# from simple.factories.category import MovieCategoryFactory
+# from simple.factories.movie import MovieFactory
+
+from simple.factories.seeds.categories import seed_categories
+from simple.factories.seeds.movies import create_movies
 
 
 class Command(BaseCommand):
@@ -36,6 +40,11 @@ class Command(BaseCommand):
                 "simple",
             )
         self.stdout.write("Created superuser")
+
+        seed_categories()
+        self.stdout.write("Seeded categories")
+        create_movies()
+        self.stdout.write("Seeded movies")
 
     def success_print(self):
         print("COMPLETED:")
