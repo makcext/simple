@@ -3,6 +3,7 @@ from django.db.models import Count
 
 from admin_auto_filters.filters import AutocompleteFilter
 from admin_numeric_filter.admin import NumericFilterModelAdmin
+from rangefilter.filters import DateRangeFilter
 from import_export import resources
 from import_export.admin import ImportExportModelAdmin
 from import_export.fields import Field
@@ -65,7 +66,14 @@ class MovieCategoryAdmin(ImportExportModelAdmin):
     """Admin interface for movie categories."""
 
     resource_class = MovieCategoryResource
-    list_display = ("name", "slug", "description", "movies_count", "is_active", "created_at")
+    list_display = (
+        "name",
+        "slug",
+        "description",
+        "movies_count",
+        "is_active",
+        "created_at",
+    )
     list_filter = ("created_at", "updated_at", "is_active")
     search_fields = ("name", "slug", "description")
     prepopulated_fields = {"slug": ("name",)}
@@ -102,7 +110,11 @@ class MovieAdmin(NumericFilterModelAdmin):
         "is_released",
         "description",
     )
-    list_filter = ("is_active",)
+    list_filter = (
+        "is_active",
+        ("release_date", DateRangeFilter),
+        CategoryFilter,
+    )
     search_fields = ("title", "original_title")
     prepopulated_fields = {"slug": ("title",)}
     readonly_fields = ("created_at", "updated_at")

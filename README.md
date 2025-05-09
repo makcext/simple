@@ -1,8 +1,6 @@
 ### Simple Django Project
 
-### Install git, gitlfs, docker, pre-commit, black, flake8
-pip install pre-commit
-pip install black flake8
+### Install git, gitlfs, docker
 
 clone the repository
 
@@ -52,8 +50,6 @@ git checkout "branch_name"
 
 git rebase
 
-### перед комитом всегда делаем
-pre-commit run --all-files
 
 
 - All models, including internal Django models:
