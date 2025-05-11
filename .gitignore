@@ -33,3 +33,4 @@ media/*
 calls.log
 /tmp/profiler/
 .idea
+.venv
