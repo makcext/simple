@@ -8,7 +8,7 @@ from import_export import resources
 from import_export.admin import ImportExportModelAdmin
 from import_export.fields import Field
 
-from simple.models.models import Movie, MovieCategory
+from simple.models.models import Movie, MovieCategory, Author, Book
 
 import logging
 
@@ -93,6 +93,183 @@ class MovieCategoryAdmin(ImportExportModelAdmin):
 
     movies_count.admin_order_field = "movies_count"
     movies_count.short_description = "Movies Count"
+
+
+class AuthorResource(resources.ModelResource):
+    """Resource for import/export of authors."""
+
+    books_count = Field(attribute="books_count", column_name="Books Count")
+
+    class Meta:
+        model = Author
+        fields = (
+            "id",
+            "first_name",
+            "last_name",
+            "biography",
+            "birth_date",
+            "death_date",
+            "nationality",
+            "is_active",
+            "created_at",
+            "updated_at",
+            "books_count",
+        )
+        export_order = (
+            "id",
+            "first_name",
+            "last_name",
+            "biography",
+            "birth_date",
+            "death_date",
+            "nationality",
+            "is_active",
+            "books_count",
+            "created_at",
+            "updated_at",
+        )
+
+    def before_export(self, queryset, *args, **kwargs):
+        """Optimize queryset by annotating books count before export."""
+        return queryset.annotate(books_count=Count("books"))
+
+    def dehydrate_books_count(self, author):
+        """Get the count of books for this author."""
+        if hasattr(author, "books_count"):
+            return author.books_count
+        return 0
+
+
+@admin.register(Author)
+class AuthorAdmin(ImportExportModelAdmin):
+    """Admin interface for authors."""
+
+    resource_class = AuthorResource
+    list_display = (
+        "first_name",
+        "last_name",
+        "biography_short",
+        "birth_date",
+        "death_date",
+        "nationality",
+        "books_count",
+        "is_active",
+    )
+    list_filter = ("is_active", "nationality")
+    search_fields = ("first_name", "last_name", "biography")
+    readonly_fields = ("created_at", "updated_at")
+    list_per_page = 50
+
+    def get_queryset(self, request):
+        """Optimize query by annotating book counts."""
+        queryset = super().get_queryset(request)
+        return queryset.annotate(books_count=Count("books"))
+
+    def biography_short(self, obj):
+        """Short version of biography for list display."""
+        return obj.biography[:100] + "..." if obj.biography else ""
+
+    biography_short.short_description = "Biography"
+
+    def books_count(self, obj):
+        """Display count of books for this author."""
+        return obj.books_count
+
+    books_count.admin_order_field = "books_count"
+    books_count.short_description = "Books Count"
+
+
+class BookResource(resources.ModelResource):
+    """Resource for import/export of books."""
+
+    author_name = Field(attribute="get_author_name", column_name="Author")
+
+    class Meta:
+        model = Book
+        fields = (
+            "id",
+            "title",
+            "original_title",
+            "slug",
+            "description",
+            "publication_date",
+            "isbn",
+            "page_count",
+            "author",
+            "author_name",
+            "is_active",
+            "created_at",
+            "updated_at",
+        )
+        export_order = (
+            "id",
+            "title",
+            "original_title",
+            "slug",
+            "description",
+            "publication_date",
+            "isbn",
+            "page_count",
+            "author_name",
+            "is_active",
+            "created_at",
+            "updated_at",
+        )
+
+
+@admin.register(Book)
+class BookAdmin(ImportExportModelAdmin):
+    """Admin interface for books."""
+
+    resource_class = BookResource
+    list_display = (
+        "title",
+        "author",
+        "publication_date",
+        "is_published",
+        "page_count",
+        "isbn",
+        "is_active",
+    )
+    list_filter = (
+        "is_active",
+        ("publication_date", DateRangeFilter),
+        "author",
+    )
+    search_fields = (
+        "title",
+        "original_title",
+        "isbn",
+        "author__first_name",
+        "author__last_name",
+    )
+    prepopulated_fields = {"slug": ("title",)}
+    readonly_fields = ("created_at", "updated_at")
+    list_select_related = ("author",)
+    list_per_page = 50
+
+    fieldsets = (
+        (None, {"fields": ("title", "original_title", "slug", "description")}),
+        (
+            "Details",
+            {
+                "fields": (
+                    "author",
+                    "publication_date",
+                    "isbn",
+                    "page_count",
+                )
+            },
+        ),
+        ("Status", {"fields": ("is_active", "created_at", "updated_at")}),
+    )
+
+    def is_published(self, obj):
+        """Check if book is published."""
+        return obj.is_published
+
+    is_published.short_description = "Published"
+    is_published.boolean = True
 
 
 @admin.register(Movie)
