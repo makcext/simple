@@ -1,0 +1,34 @@
+from simple.factories.author import AuthorFactory
+
+
+def create_essential_authors():
+    """Create core author records for development environment."""
+    essential_authors = [
+        {
+            "first_name": "Leo",
+            "last_name": "Tolstoy",
+            "slug": "leo-tolstoy",
+            "birth_date": "1828-09-09",
+            "death_date": "1910-11-20",
+            "nationality": "RU",
+            "biography": "Russian writer, master of realistic fiction.",
+        },
+        {
+            "first_name": "Fyodor",
+            "last_name": "Dostoevsky",
+            "slug": "fyodor-dostoevsky",
+            "birth_date": "1821-11-11",
+            "death_date": "1881-02-09",
+            "nationality": "RU",
+            "biography": "Russian novelist and philosopher.",
+        },
+    ]
+    return [AuthorFactory.create(**author) for author in essential_authors]
+
+
+def seed_authors():
+    """Main seeding function for authors."""
+    print("Seeding authors...")
+    authors = create_essential_authors()
+    print(f"✓ Created {len(authors)} essential authors")
+    return authors

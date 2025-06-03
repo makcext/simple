@@ -1,0 +1,133 @@
+from simple.factories.book import BookFactory
+from simple.models.models import Author
+
+def create_books():
+
+    tolstoy = Author.objects.get(slug="leo-tolstoy")
+    dostoevsky = Author.objects.get(slug="fyodor-dostoevsky")
+    hemingway = Author.objects.get(slug="ernest-hemingway")
+    orwell = Author.objects.get(slug="george-orwell")
+    rowling = Author.objects.get(slug="jk-rowling")
+    king = Author.objects.get(slug="stephen-king")
+    christie = Author.objects.get(slug="agatha-christie")
+    murakami = Author.objects.get(slug="haruki-murakami")
+
+    BookFactory.create(
+        title="War and Peace",
+        original_title="Война и мир",
+        description="Epic novel that chronicles the French invasion of Russia and the impact of the Napoleonic era on Tsarist society.",
+        publication_date="1869-01-01",
+        isbn="9780198800545",
+        page_count=1225,
+        author=tolstoy,
+        slug="war-and-peace",
+        is_active=True
+    )
+
+    BookFactory.create(
+        title="Anna Karenina",
+        original_title="Анна Каренина",
+        description="Tragic novel about married aristocrat Anna Karenina and her affair with the affluent Count Vronsky.",
+        publication_date="1878-01-01",
+        isbn="9780143035008",
+        page_count=864,
+        author=tolstoy,
+        slug="anna-karenina",
+        is_active=True
+    )
+
+    BookFactory.create(
+        title="Crime and Punishment",
+        original_title="Преступление и наказание",
+        description="Novel about the mental anguish and moral dilemmas of an impoverished ex-student who murders a pawnbroker.",
+        publication_date="1866-01-01",
+        isbn="9780143058144",
+        page_count=545,
+        author=dostoevsky,
+        slug="crime-and-punishment",
+        is_active=True
+    )
+
+    BookFactory.create(
+        title="The Old Man and the Sea",
+        original_title=None,
+        description="Novel about an aging Cuban fisherman who struggles with a giant marlin far out in the Gulf Stream.",
+        publication_date="1952-09-01",
+        isbn="9780684801223",
+        page_count=127,
+        author=hemingway,
+        slug="the-old-man-and-the-sea",
+        is_active=True
+    )
+
+    BookFactory.create(
+        title="1984",
+        original_title=None,
+        description="Dystopian novel set in a totalitarian society ruled by the Party and its leader Big Brother.",
+        publication_date="1949-06-08",
+        isbn="9780451524935",
+        page_count=328,
+        author=orwell,
+        slug="1984",
+        is_active=True
+    )
+
+    BookFactory.create(
+        title="Harry Potter and the Philosopher's Stone",
+        original_title=None,
+        description="First novel in the Harry Potter series about a young wizard who discovers his magical heritage.",
+        publication_date="1997-06-26",
+        isbn="9780747532743",
+        page_count=223,
+        author=rowling,
+        slug="harry-potter-philosophers-stone",
+        is_active=True
+    )
+
+    BookFactory.create(
+        title="The Shining",
+        original_title=None,
+        description="Horror novel about a writer's descent into madness while winter caretaker at an isolated hotel.",
+        publication_date="1977-01-28",
+        isbn="9780307743657",
+        page_count=447,
+        author=king,
+        slug="the-shining",
+        is_active=True
+    )
+
+    BookFactory.create(
+        title="Murder on the Orient Express",
+        original_title=None,
+        description="Detective novel featuring Hercule Poirot investigating a murder on a train.",
+        publication_date="1934-01-01",
+        isbn="9780007119318",
+        page_count=256,
+        author=christie,
+        slug="murder-on-the-orient-express",
+        is_active=True
+    )
+
+    BookFactory.create(
+        title="Norwegian Wood",
+        original_title="ノルウェイの森",
+        description="Novel about nostalgia, loss, and burgeoning sexuality.",
+        publication_date="1987-09-04",
+        isbn="9780375704024",
+        page_count=296,
+        author=murakami,
+        slug="norwegian-wood",
+        is_active=True
+    )
+
+    BookFactory.create(
+        title="The Brothers Karamazov",
+        original_title="Братья Карамазовы",
+        description="Philosophical novel that explores questions of God, free will, and morality.",
+        publication_date="1880-11-01",
+        isbn="9780374528379",
+        page_count=796,
+        author=dostoevsky,
+        slug="the-brothers-karamazov",
+        is_active=True
+    )

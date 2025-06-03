@@ -1,14 +1,11 @@
 from django.core.management.base import BaseCommand, CommandError
-
-# from django.conf import settings
 from django.db import transaction
 from django.contrib.auth import get_user_model
 
-# from simple.factories.category import MovieCategoryFactory
-# from simple.factories.movie import MovieFactory
-
 from simple.factories.seeds.categories import seed_categories
 from simple.factories.seeds.movies import create_movies
+from simple.factories.seeds.authors import seed_authors
+from simple.factories.seeds.books import seed_books
 
 
 class Command(BaseCommand):
@@ -30,7 +27,6 @@ class Command(BaseCommand):
         self.success_print()
 
     def populate_db(self):
-
         # Create superuser
         User = get_user_model()
         if not User.objects.filter(username="simple").exists():
@@ -45,6 +41,10 @@ class Command(BaseCommand):
         self.stdout.write("Seeded categories")
         create_movies()
         self.stdout.write("Seeded movies")
+        seed_authors()
+        self.stdout.write("Seeded authors")
+        seed_books()
+        self.stdout.write("Seeded books")
 
     def success_print(self):
         print("COMPLETED:")
