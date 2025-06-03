@@ -37,12 +37,16 @@ class Command(BaseCommand):
             )
         self.stdout.write("Created superuser")
 
+        # Seed data in proper order
         seed_categories()
         self.stdout.write("Seeded categories")
-        create_movies()
-        self.stdout.write("Seeded movies")
+
         seed_authors()
         self.stdout.write("Seeded authors")
+
+        create_movies()
+        self.stdout.write("Seeded movies")
+
         seed_books()
         self.stdout.write("Seeded books")
 
