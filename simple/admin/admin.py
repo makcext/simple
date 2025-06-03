@@ -240,8 +240,8 @@ class BookAdmin(ImportExportModelAdmin):
         "title",
         "original_title",
         "isbn",
-        "author__first_name",
-        "author__last_name",
+        "author_first_name",
+        "author_last_name",
     )
     prepopulated_fields = {"slug": ("title",)}
     readonly_fields = ("created_at", "updated_at")

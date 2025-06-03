@@ -176,6 +176,7 @@ class Movie(models.Model):
         super().clean()
         if not self.slug and self.title:
             from django.utils.text import slugify
+
             self.slug = slugify(self.title)
 
     @property
@@ -354,6 +355,7 @@ class Book(models.Model):
         super().clean()
         if not self.slug and self.title:
             from django.utils.text import slugify
+
             self.slug = slugify(self.title)
 
     @property
