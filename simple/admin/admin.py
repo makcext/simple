@@ -264,13 +264,60 @@ class BookAdmin(ImportExportModelAdmin):
         ("Status", {"fields": ("is_active", "created_at", "updated_at")}),
     )
 
-    def is_published(self, obj):
-        """Check if book is published."""
-        return obj.is_published
+    actions = [
+        "mark_as_published",
+        "mark_as_unpublished",
+        "mark_as_active",
+        "mark_as_inactive"
+        ]
 
-    is_published.short_description = "Published"
-    is_published.boolean = True
+    def mark_as_published(self, request, queryset):
+        """Mark selected books as published."""
+        updated = queryset.update(published=True)
+        self.message_user(
+            request,
+            f"{updated} {'books were' if updated != 1 else 'book was'} marked as published.",
+        )
 
+    def mark_as_unpublished(self, request, queryset):
+        """Mark selected books as unpublished."""
+        updated = queryset.update(published=False)
+        self.message_user(
+            request,
+            f"{updated} {'books were' if updated != 1 else 'book was'} marked as unpublished.",
+        )
+
+    def mark_as_active(self, request, queryset):
+        """Mark selected books as active."""
+        updated = queryset.update(is_active=True)
+        self.message_user(
+            request,
+            f"{updated} {'books were' if updated != 1 else 'book was'} marked as active.",
+        )
+
+    def mark_as_inactive(self, request, queryset):
+        """Mark selected books as inactive."""
+        updated = queryset.update(is_active=False)
+        self.message_user(
+            request,
+            f"{updated} {'books were' if updated != 1 else 'book was'} marked as inactive.",
+        )
+
+    def mark_as_active(self, request, queryset):
+        """Mark selected books as active."""
+        updated = queryset.update(is_active=True)
+        self.message_user(
+            request,
+            f"{updated} {'books were' if updated != 1 else 'book was'} marked as active.",
+        )
+
+    def mark_as_inactive(self, request, queryset):
+        """Mark selected books as inactive."""
+        updated = queryset.update(is_active=False)
+        self.message_user(
+            request,
+            f"{updated} {'books were' if updated != 1 else 'book was'} marked as inactive.",
+        )
 
 @admin.register(Movie)
 class MovieAdmin(NumericFilterModelAdmin):
