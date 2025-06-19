@@ -226,7 +226,6 @@ class BookAdmin(ImportExportModelAdmin):
         "title",
         "author",
         "publication_date",
-        "is_published",
         "page_count",
         "isbn",
         "is_active",
@@ -240,8 +239,8 @@ class BookAdmin(ImportExportModelAdmin):
         "title",
         "original_title",
         "isbn",
-        "author_first_name",
-        "author_last_name",
+        "author__first_name",
+        "author__last_name",
     )
     prepopulated_fields = {"slug": ("title",)}
     readonly_fields = ("created_at", "updated_at")
@@ -264,12 +263,26 @@ class BookAdmin(ImportExportModelAdmin):
         ("Status", {"fields": ("is_active", "created_at", "updated_at")}),
     )
 
-    def is_published(self, obj):
-        """Check if book is published."""
-        return obj.is_published
+    actions = [
+        "mark_as_active",
+        "mark_as_inactive"
+    ]
 
-    is_published.short_description = "Published"
-    is_published.boolean = True
+    def mark_as_active(self, request, queryset):
+        """Mark selected books as active."""
+        updated = queryset.update(is_active=True)
+        self.message_user(
+            request,
+            f"{updated} {'books were' if updated != 1 else 'book was'} marked as active.",
+        )
+
+    def mark_as_inactive(self, request, queryset):
+        """Mark selected books as inactive."""
+        updated = queryset.update(is_active=False)
+        self.message_user(
+            request,
+            f"{updated} {'books were' if updated != 1 else 'book was'} marked as inactive.",
+        )
 
 
 @admin.register(Movie)
