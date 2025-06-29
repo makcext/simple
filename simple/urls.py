@@ -20,14 +20,18 @@ from django.contrib import admin
 
 from django.urls import include, path
 
-# from django.urls import re_path
-# from drf_spectacular.views import (
-#     SpectacularJSONAPIView,
-#     SpectacularSwaggerView,
-#     SpectacularRedocView,
-# )
-from rest_framework import routers
+from django.urls import re_path
+from drf_spectacular.views import (
+    SpectacularJSONAPIView,
+    SpectacularSwaggerView,
+    SpectacularRedocView,
+)
+
+# from drf_yasg import openapi
 from drf_yasg.generators import OpenAPISchemaGenerator
+
+# from drf_yasg.views import get_schema_view
+from rest_framework import routers
 
 
 class SchemaGenerator(OpenAPISchemaGenerator):
@@ -42,29 +46,30 @@ class SchemaGenerator(OpenAPISchemaGenerator):
 
 router = routers.DefaultRouter()
 
-# jwt_urlpatterns = [
-#     re_path(
-#         r"api/v1/",
-#         include(
-#             ("simple.api.v1.urls", "simple.api.v1"),
-#             namespace="simple-api-v1",
-#         ),
-#     )
-# ]
+jwt_urlpatterns = [
+    re_path(
+        r"api/",
+        include(
+            ("simple.api.movies.urls", "simple.api"),
+            namespace="simple-api",
+        ),
+    )
+]
 
-# swager_urlpatterns = [
-#     path("api/v1/schema.json", SpectacularJSONAPIView.as_view(), name="spec-schema"),
-#     path(
-#         "api/v1/swagger/",
-#         SpectacularSwaggerView.as_view(url_name="spec-schema"),
-#         name="spec-swagger",
-#     ),
-#     path(
-#         "api/v1/redoc/",
-#         SpectacularRedocView.as_view(url_name="spec-schema"),
-#         name="spec-redoc",
-#     ),
-# ]
+
+swager_urlpatterns = [
+    path("api/schema.json", SpectacularJSONAPIView.as_view(), name="spec-schema"),
+    path(
+        "api/swagger/",
+        SpectacularSwaggerView.as_view(url_name="spec-schema"),
+        name="spec-swagger",
+    ),
+    path(
+        "api/redoc/",
+        SpectacularRedocView.as_view(url_name="spec-schema"),
+        name="spec-redoc",
+    ),
+]
 
 urlpatterns = (
     [
@@ -75,6 +80,6 @@ urlpatterns = (
         # Django Debug Toolbar
         path("__debug__/", include("debug_toolbar.urls")),
     ]
-    # + jwt_urlpatterns
-    # + swager_urlpatterns
+    + jwt_urlpatterns
+    + swager_urlpatterns
 )

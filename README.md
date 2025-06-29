@@ -59,3 +59,9 @@ git rebase
 ./manage.py graph_models -a -o docs/simple_models_diagram.png --exclude-models LogEntry,Permission,Group,AbstractUser,PermissionMixin,ContentType,Session,DjangoJob,DjangoJobExecution,AbstractBaseSession,User,Task
 
 - файлы с именами, заканчивающимися на _test.py, будут рассматриваться как тестовые файлы.
+
+
+### Документация OpenAPI (Swagger)
+
+Документация доступна по адресу:
+[http://localhost:8000/api/swagger/](http://localhost:8000/api/swagger/)

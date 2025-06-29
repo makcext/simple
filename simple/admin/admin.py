@@ -263,17 +263,14 @@ class BookAdmin(ImportExportModelAdmin):
         ("Status", {"fields": ("is_active", "created_at", "updated_at")}),
     )
 
-    actions = [
-        "mark_as_active",
-        "mark_as_inactive"
-    ]
+    actions = ["mark_as_active", "mark_as_inactive"]
 
     def mark_as_active(self, request, queryset):
         """Mark selected books as active."""
         updated = queryset.update(is_active=True)
         self.message_user(
             request,
-            f"{updated} {'books were' if updated != 1 else 'book was'} marked as active.",
+            f"{updated} {'books were' if updated != 1 else 'book was'} active.",
         )
 
     def mark_as_inactive(self, request, queryset):
@@ -281,7 +278,7 @@ class BookAdmin(ImportExportModelAdmin):
         updated = queryset.update(is_active=False)
         self.message_user(
             request,
-            f"{updated} {'books were' if updated != 1 else 'book was'} marked as inactive.",
+            f"{updated} {'books were' if updated != 1 else 'book was'} inactive.",
         )
 
 
