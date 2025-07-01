@@ -23,6 +23,13 @@
 #         AgentTaskResultView.as_view(),
 #         name="agent-task-result",
 #     ),
-#     path('admin/', admin.site.urls),
-#     path('api/v1/', include('simple.api.v1.new_urls')),
+#     path('api/', include('api.movies.urls')
+#     ),
+#    path('api/movies/', include('api.movies.new_urls')
+#     ),
+#    path('api/library/', include('api.library.urls')
+#     ),
+#    path('api/v1/', include('api.v1.urls')
+#     ),
+#     ])),
 # ]
