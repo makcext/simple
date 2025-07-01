@@ -23,4 +23,6 @@
 #         AgentTaskResultView.as_view(),
 #         name="agent-task-result",
 #     ),
+#     path('admin/', admin.site.urls),
+#     path('api/v1/', include('simple.api.v1.new_urls')),
 # ]
