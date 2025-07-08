@@ -6,12 +6,12 @@ router = routers.DefaultRouter()
 
 urlpatterns = [
     re_path(
-        r"^api/author/$",
+        r"^author/$",
         AuthorListView.as_view(),
         name="author-list",
         ),
     re_path(
-        r"^api/author/(?P<id>\d+)/$",
+        r"^author/(?P<id>\d+)/$",
         AuthorListView.as_view(),
         name="author-detail",
     ),

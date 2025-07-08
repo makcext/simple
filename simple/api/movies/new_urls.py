@@ -1,14 +1,19 @@
-from .views import MovieCategoryHandler, MovieCategoryByIdHandler
+from django.urls import path, re_path, include
+from rest_framework import routers
+from simple.api.movies.new_views import MovieCategory
+
+router = routers.DefaultRouter()
 
 urlpatterns = [
-    path(
-        "movies-category/",
-        MovieCategoryHandler.as_view(),
-        name="movie-category-handler",
+    re_path(
+        r"^movies/$",
+        .as_view(),
+        name="movie-category-list",
+        ),
+    re_path(
+        r"^movies/(?P<id>\d+)/$",
+        AuthorListView.as_view(),
+        name="movie-category-detail",
     ),
-    path(
-        "movies-category/<int:id>/",
-        MovieCategoryByIdHandler.as_view(),
-        name="movie-category-by-id-handler",
-    ),
+    re_path(r"", include(router.urls)),
 ]

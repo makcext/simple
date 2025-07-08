@@ -7,12 +7,12 @@ router = routers.DefaultRouter()
 
 urlpatterns = [
   re_path(
-    r"^api/movies-category/$",
+    r"^movies-category/$",
     MovieCategoryListView.as_view(),
     name="movie-category-list",
   ),
   re_path(
-        r"^api/movies-category/(?P<id>\d+)/$",
+        r"^movies-category/(?P<id>\d+)/$",
         MovieCategoryByIdView.as_view(),
         name="movie-category-detail",
     ),
