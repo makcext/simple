@@ -53,7 +53,14 @@ jwt_urlpatterns = [
             ("simple.api.movies.urls", "simple.api"),
             namespace="simple-api",
         ),
-    )
+    ),
+    re_path(
+        r"api/",
+        include(
+            ("simple.api.library.urls", "simple.api"),
+            namespace="library-api",
+        ),
+    ),
 ]
 
 
