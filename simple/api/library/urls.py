@@ -1,9 +1,12 @@
-from django.urls import path
+from django.urls import re_path
+from django.urls import include
 from simple.api.library.views import AuthorListView
 urlpatterns = [
-    path(
-        r"^api/author/$",
-        AuthorListView.as_view(),
-        name="author-list",
-        ),
+    re_path(
+        r"api/",
+        include(
+            ("simple.api.library.urls", "simple.api"),
+            namespace="library-api",
+               ),
+            ),
 ]
