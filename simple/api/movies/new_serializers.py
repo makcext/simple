@@ -3,6 +3,10 @@ from simple.models import MovieCategory
 
 
 class MovieCategorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = MovieCategory
-        fields = '__all__'
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    slug = serializers.CharField()
+    description = serializers.CharField()
+    is_active = serializers.BooleanField()
+    created_at = serializers.DateTimeField()
+    updated_at = serializers.DateTimeField()
