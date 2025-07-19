@@ -1,44 +1,72 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
+from drf_spectacular.utils import OpenApiParameter, OpenApiTypes, extend_schema
 from rest_framework import status
-from rest_framework.parsers import JSONParser, FormParser
-
-from drf_spectacular.utils import (
-    extend_schema,
-    OpenApiParameter,
-    OpenApiExample,
-)
+from rest_framework.parsers import FormParser, JSONParser
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from simple.models import Author
-from simple.api.library.serializers.root import AuthorItemSerializer
+from simple.api.library.serializers.root import AuthorSerializer, AuthorFieldsSerializer
 
 
 class AuthorListView(APIView):
     """
-    API endpoint for listing and creating authors
+    API endpoint for authors
     """
-    serializer_class = AuthorItemSerializer
+    serializer_class = AuthorSerializer
     parser_classes = [JSONParser, FormParser]
 
     @extend_schema(
-        examples=[
-            OpenApiExample(
-                'Author List Example',
-                value=[{
-                    "id": 1,
-                    "first_name": "John",
-                    "last_name": "Doe"
-                }],
-                response_only=True
-            )
-        ]
+        methods=["GET"],
+        operation_id="author-handler",
+        description="Get all authors",
+        tags=["Authors"],
+        responses=AuthorSerializer,
     )
-    def get(self, request, id=None):
-        if id is not None:
-            author = Author.objects.get(id=id)
-            serializer = self.serializer_class(author)
-            return Response(serializer.data)
-        else:
-            queryset = Author.objects.all()
-            serializer = self.serializer_class(queryset, many=True)
-            return Response(serializer.data)
+    def get(self, request):
+        """
+        Get all authors with basic information
+        """
+        authors = Author.objects.all()
+        serializer = self.serializer_class(authors, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class AuthorByIdView(APIView):
+    """
+    Retrieve an author by its ID with all fields.
+    """
+    serializer_class = AuthorFieldsSerializer
+    parser_classes = [JSONParser, FormParser]
+
+    @extend_schema(
+        methods=["GET"],
+        operation_id="author-by-id-handler",
+        description="Get all fields of author by ID",
+        tags=["Authors"],
+        responses={
+            200: OpenApiTypes.OBJECT,
+            404: OpenApiTypes.OBJECT,
+        },
+        parameters=[
+            OpenApiParameter(
+                name="id",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+                description="ID of the author",
+                required=True,
+            ),
+        ],
+    )
+    def get(self, request, id):
+        """
+        Get all fields of an author by ID
+        """
+        try:
+            author = Author.objects.get(pk=id)
+        except Author.DoesNotExist:
+            return Response(
+                {"detail": "Not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        serializer = AuthorFieldsSerializer(author)
+        return Response(serializer.data, status=status.HTTP_200_OK)
