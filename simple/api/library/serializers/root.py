@@ -2,7 +2,13 @@ from rest_framework import serializers
 from simple.factories.seeds.authors import Author
 
 
-class AuthorItemSerializer(serializers.Serializer):
+class AuthorSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+
+
+class AuthorFieldsSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     first_name = serializers.CharField()
     last_name = serializers.CharField()
