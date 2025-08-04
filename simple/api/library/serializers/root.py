@@ -1,6 +1,6 @@
 from rest_framework import serializers
-from simple.factories.seeds.authors import Author
-from simple.factories.seeds.books import Book
+from simple.factories.author import Author
+from simple.factories.book import Book
 
 
 class AuthorSerializer(serializers.Serializer):
@@ -31,7 +31,7 @@ class BookSerializer(serializers.Serializer):
     publication_date = serializers.DateField()
     isbn = serializers.CharField(max_length=20)
     page_count = serializers.IntegerField(min_value=1)
-    author = serializers.PrimaryKeyRelatedField(queryset=Author.objects.all())
+    author_full_name = serializers.CharField(source="author.full_name")
     author_name = serializers.CharField(source="author.full_name", read_only=True)
     is_active = serializers.BooleanField(default=True)
     created_at = serializers.DateTimeField(read_only=True)
