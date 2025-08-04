@@ -1,6 +1,4 @@
 from rest_framework import serializers
-from simple.factories.author import Author
-from simple.factories.book import Book
 
 
 class AuthorSerializer(serializers.Serializer):
