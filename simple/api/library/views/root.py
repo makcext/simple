@@ -4,8 +4,13 @@ from rest_framework.parsers import FormParser, JSONParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from simple.models import Author
-from simple.api.library.serializers.root import AuthorSerializer, AuthorFieldsSerializer
+from simple.models.models import Author
+from simple.models.models import Book
+from simple.api.library.serializers.root import (
+    AuthorSerializer,
+    AuthorFieldsSerializer,
+    BookSerializer
+)
 
 
 class AuthorListView(APIView):
@@ -20,7 +25,7 @@ class AuthorListView(APIView):
         operation_id="author-handler",
         description="Get all authors",
         tags=["Authors"],
-        responses=AuthorSerializer,
+        responses=AuthorSerializer(many=True),
     )
     def get(self, request):
         """
@@ -44,7 +49,7 @@ class AuthorByIdView(APIView):
         description="Get all fields of author by ID",
         tags=["Authors"],
         responses={
-            200: OpenApiTypes.OBJECT,
+            200: AuthorFieldsSerializer,
             404: OpenApiTypes.OBJECT,
         },
         parameters=[
@@ -63,10 +68,52 @@ class AuthorByIdView(APIView):
         """
         try:
             author = Author.objects.get(pk=id)
+            serializer = AuthorFieldsSerializer(author)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         except Author.DoesNotExist:
             return Response(
-                {"detail": "Not found."},
+                {"detail": "Author not found."},
                 status=status.HTTP_404_NOT_FOUND,
             )
-        serializer = AuthorFieldsSerializer(author)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class AuthorBooksView(APIView):
+    """
+    Retrieve all books of an author by author ID.
+    """
+    serializer_class = BookSerializer
+    parser_classes = [JSONParser, FormParser]
+
+    @extend_schema(
+        methods=["GET"],
+        operation_id="author-books-handler",
+        description="Get all books of author by author ID",
+        tags=["Authors"],
+        responses={
+            200: BookSerializer(many=True),
+            404: OpenApiTypes.OBJECT,
+        },
+        parameters=[
+            OpenApiParameter(
+                name="author_id",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+                description="ID of the author",
+                required=True,
+            ),
+        ],
+    )
+    def get(self, request, author_id):
+        """
+        Get all books of an author by author ID
+        """
+        try:
+            author = Author.objects.get(pk=author_id)
+            books = Book.objects.filter(author=author)
+            serializer = self.serializer_class(books, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Author.DoesNotExist:
+            return Response(
+                {"detail": "Author not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
