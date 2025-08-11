@@ -14,7 +14,4 @@ class MovieCategoryFieldsSerializer(serializers.Serializer):
     created_at = serializers.DateTimeField()
     updated_at = serializers.DateTimeField()
 
-
-class MovieSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
-    title = serializers.CharField(max_length=200)
+#ToDo: Implement MovieSerializer
