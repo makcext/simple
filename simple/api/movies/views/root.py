@@ -8,6 +8,7 @@ from rest_framework.views import APIView
 from simple.api.movies.serializers.root import (
    MovieCategorySerializer,
    MovieCategoryFieldsSerializer,
+   MovieSerializer,
 )
 
 from simple.models import Movie, MovieCategory
@@ -74,4 +75,37 @@ class MovieCategoryByIdView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
         serializer = MovieCategoryFieldsSerializer(category)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class GetActiveMovieView(APIView):
+    serializer_class = MovieSerializer
+    parser_classes = [JSONParser, FormParser]
+
+    @extend_schema(
+        methods=["GET"],
+        operation_id="get-active-movie",
+        description="Get first active movie and deactivate it",
+        tags=["Movies"],
+        responses={
+            200: MovieSerializer,
+            404: OpenApiTypes.OBJECT,
+        },
+    )
+    def get(self, request):
+        """
+        Get first active movie and deactivate it.
+        If no active movies left, returns "NO MOVIES".
+        """
+        movie = Movie.objects.filter(is_active=True).first()
+
+        if not movie:
+            return Response(
+                {"message": "NO MOVIES"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        movie.is_active = False
+        movie.save()
+
+        serializer = self.serializer_class(movie)
         return Response(serializer.data, status=status.HTTP_200_OK)
