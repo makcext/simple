@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from simple.models import Movie, MovieCategory
 
 
 class MovieCategorySerializer(serializers.Serializer):
@@ -14,4 +15,8 @@ class MovieCategoryFieldsSerializer(serializers.Serializer):
     created_at = serializers.DateTimeField()
     updated_at = serializers.DateTimeField()
 
-#ToDo: Implement MovieSerializer
+
+class MovieSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    title = serializers.CharField(max_length=255)
+    description = serializers.CharField()
