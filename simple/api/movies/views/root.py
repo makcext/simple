@@ -78,34 +78,36 @@ class MovieCategoryByIdView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class GetActiveMovieView(APIView):
-    serializer_class = MovieSerializer
-    parser_classes = [JSONParser, FormParser]
+class NextActiveMovieView(APIView):
+    """
+    Get the next active movie and deactivate it after retrieval.
+    """
 
     @extend_schema(
         methods=["GET"],
-        operation_id="get-active-movie",
-        description="Get first active movie and deactivate it",
+        operation_id="next-active-movie",
+        description="Get the next active movie and deactivate it",
         tags=["Movies"],
         responses={
             200: MovieSerializer,
-            404: OpenApiTypes.OBJECT,
-        },
+            404: {"description": "No active movies available"},
+        }
     )
     def get(self, request):
         """
-        Get first active movie and deactivate it.
-        If no active movies left, returns "NO MOVIES".
+        Returns the next active movie and marks it as inactive.
+        If no active movies are available, returns "NO MOVIES".
         """
         movie = Movie.objects.filter(is_active=True).first()
 
         if not movie:
             return Response(
                 {"message": "NO MOVIES"},
-                status=status.HTTP_404_NOT_FOUND,
+                status=status.HTTP_404_NOT_FOUND
             )
+
+        serializer = MovieSerializer(movie)
         movie.is_active = False
         movie.save()
 
-        serializer = self.serializer_class(movie)
         return Response(serializer.data, status=status.HTTP_200_OK)
