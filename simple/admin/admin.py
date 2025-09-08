@@ -1,5 +1,8 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.db.models import Count
+from django.http import HttpResponseRedirect
+from django.urls import path
+from django.utils.html import format_html
 
 from admin_auto_filters.filters import AutocompleteFilter
 from admin_numeric_filter.admin import NumericFilterModelAdmin
@@ -8,7 +11,8 @@ from import_export import resources
 from import_export.admin import ImportExportModelAdmin
 from import_export.fields import Field
 
-from simple.models.models import Movie, MovieCategory, Author, Book
+from simple.models.models import Movie, MovieCategory, Author, Book, Weather
+from simple.processes.get_weather import get_weather_data
 
 import logging
 
@@ -270,7 +274,7 @@ class BookAdmin(ImportExportModelAdmin):
         updated = queryset.update(is_active=True)
         self.message_user(
             request,
-            f"{updated} {'books were' if updated != 1 else 'book was'} active.",
+            f"{updated} {'books were' if updated != 1 else 'book was'} marked as active.",
         )
 
     def mark_as_inactive(self, request, queryset):
@@ -278,7 +282,7 @@ class BookAdmin(ImportExportModelAdmin):
         updated = queryset.update(is_active=False)
         self.message_user(
             request,
-            f"{updated} {'books were' if updated != 1 else 'book was'} inactive.",
+            f"{updated} {'books were' if updated != 1 else 'book was'} marked as inactive.",
         )
 
 
@@ -295,7 +299,6 @@ class MovieAdmin(NumericFilterModelAdmin):
         "display_rating",
         "display_category",
         "is_released",
-        "description",
     )
     list_filter = (
         "is_active",
@@ -309,7 +312,6 @@ class MovieAdmin(NumericFilterModelAdmin):
     list_per_page = 50
     show_full_result_count = False
 
-    # Добавляем сортировку по умолчанию
     ordering = ("-release_date", "title")
 
     fieldsets = (
@@ -378,8 +380,7 @@ class MovieAdmin(NumericFilterModelAdmin):
         updated = queryset.update(is_active=True)
         self.message_user(
             request,
-            f"{updated} {'movies were' if updated != 1 else 'movie was'} "
-            f"marked as active.",
+            f"{updated} {'movies were' if updated != 1 else 'movie was'} marked as active.",
         )
         logger.info(
             "Admin user marked movies as active",
@@ -397,8 +398,7 @@ class MovieAdmin(NumericFilterModelAdmin):
         updated = queryset.update(is_active=False)
         self.message_user(
             request,
-            f"{updated} {'movies were' if updated != 1 else 'movie was'} "
-            f"marked as inactive.",
+            f"{updated} {'movies were' if updated != 1 else 'movie was'} marked as inactive.",
         )
         logger.info(
             "Admin user marked movies as inactive",
@@ -410,3 +410,159 @@ class MovieAdmin(NumericFilterModelAdmin):
         )
 
     mark_as_inactive.short_description = "Mark selected movies as inactive"
+
+
+class WeatherResource(resources.ModelResource):
+    """Resource for import/export of weather data."""
+
+    temperature_celsius = Field(attribute="celsius_temperature", column_name="Temperature (°C)")
+    temperature_fahrenheit = Field(attribute="fahrenheit_temperature", column_name="Temperature (°F)")
+
+    class Meta:
+        model = Weather
+        fields = (
+            "id",
+            "city_name",
+            "country_code",
+            "temperature",
+            "temperature_celsius",
+            "temperature_fahrenheit",
+            "weather_main",
+            "weather_description",
+            "pressure",
+            "humidity",
+            "wind_speed",
+            "clouds",
+            "created_at",
+            "api_timestamp",
+        )
+        export_order = (
+            "id",
+            "city_name",
+            "country_code",
+            "temperature_celsius",
+            "temperature_fahrenheit",
+            "weather_main",
+            "weather_description",
+            "pressure",
+            "humidity",
+            "wind_speed",
+            "clouds",
+            "created_at",
+            "api_timestamp",
+        )
+
+
+@admin.register(Weather)
+class WeatherAdmin(ImportExportModelAdmin):
+    """Admin interface for weather data."""
+
+    resource_class = WeatherResource
+    list_display = (
+        "city_name",
+        "temperature_display",
+        "weather_description",
+        "humidity",
+        "pressure",
+        "wind_speed",
+        "created_at",
+    )
+    list_filter = (
+        "city_name",
+        "weather_main",
+        ("created_at", DateRangeFilter),
+    )
+    search_fields = ("city_name", "weather_description", "weather_main")
+    readonly_fields = (
+        "created_at",
+        "api_timestamp",
+        "temperature_display",
+        "fahrenheit_display",
+    )
+    list_per_page = 50
+    show_full_result_count = False
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        extra_context['show_fetch_button'] = True
+        return super().changelist_view(request, extra_context=extra_context)
+
+    def get_urls(self):
+        """Add custom URL for fetching weather data."""
+        urls = super().get_urls()
+        custom_urls = [
+            path('fetch-weather/', self.fetch_weather, name='fetch_weather'),
+        ]
+        return custom_urls + urls
+
+    def fetch_weather(self, request):
+        """Handler for fetch weather button."""
+        success, message = get_weather_data()
+
+        if success:
+            messages.success(request, message)
+            logger.info(
+                "Weather data fetched successfully",
+                extra={
+                    "user_id": request.user.id,
+                    "username": request.user.username,
+                },
+            )
+        else:
+            messages.error(request, message)
+            logger.error(
+                "Failed to fetch weather data",
+                extra={
+                    "user_id": request.user.id,
+                    "username": request.user.username,
+                    "error": message,
+                },
+            )
+
+        return HttpResponseRedirect("../")
+
+    def temperature_display(self, obj):
+        """Display temperature in Celsius."""
+        return f"{obj.celsius_temperature()}°C"
+    temperature_display.short_description = "Temperature"
+    temperature_display.admin_order_field = "temperature"
+
+    def fahrenheit_display(self, obj):
+        """Display temperature in Fahrenheit."""
+        return f"{obj.fahrenheit_temperature()}°F"
+    fahrenheit_display.short_description = "Temperature (F)"
+
+    actions = ["delete_old_records"]
+
+    def delete_old_records(self, request, queryset):
+        """Delete weather records older than 30 days."""
+        from django.utils import timezone
+        from datetime import timedelta
+
+        cutoff_date = timezone.now() - timedelta(days=30)
+        old_records = queryset.filter(created_at__lt=cutoff_date)
+        count = old_records.count()
+
+        if count > 0:
+            old_records.delete()
+            self.message_user(
+                request,
+                f"Successfully deleted {count} old weather records.",
+                messages.SUCCESS,
+            )
+            logger.info(
+                "Deleted old weather records",
+                extra={
+                    "user_id": request.user.id,
+                    "username": request.user.username,
+                    "count": count,
+                },
+            )
+        else:
+            self.message_user(
+                request,
+                "No old weather records found to delete.",
+                messages.INFO,
+            )
+
+    delete_old_records.short_description = "Delete records older than 30 days"
