@@ -1,8 +1,8 @@
-from django.contrib import admin, messages
+from django.contrib import admin
 from django.db.models import Count
 from django.http import HttpResponseRedirect
 from django.urls import path
-from django.utils.html import format_html
+from django.contrib import messages
 
 from admin_auto_filters.filters import AutocompleteFilter
 from admin_numeric_filter.admin import NumericFilterModelAdmin
@@ -11,7 +11,8 @@ from import_export import resources
 from import_export.admin import ImportExportModelAdmin
 from import_export.fields import Field
 
-from simple.models.models import Movie, MovieCategory, Author, Book, Weather
+from simple.models.models import Movie, MovieCategory, Author, Book
+from simple.models.weather import Weather
 from simple.processes.get_weather import get_weather_data
 
 import logging
@@ -415,8 +416,8 @@ class MovieAdmin(NumericFilterModelAdmin):
 class WeatherResource(resources.ModelResource):
     """Resource for import/export of weather data."""
 
-    temperature_celsius = Field(attribute="celsius_temperature", column_name="Temperature (°C)")
-    temperature_fahrenheit = Field(attribute="fahrenheit_temperature", column_name="Temperature (°F)")
+    temperature_celsius = Field(attribute="temperature_celsius", column_name="Temperature (°C)")
+    temperature_fahrenheit = Field(attribute="temperature_fahrenheit", column_name="Temperature (°F)")
 
     class Meta:
         model = Weather
@@ -424,7 +425,6 @@ class WeatherResource(resources.ModelResource):
             "id",
             "city_name",
             "country_code",
-            "temperature",
             "temperature_celsius",
             "temperature_fahrenheit",
             "weather_main",
@@ -434,7 +434,6 @@ class WeatherResource(resources.ModelResource):
             "wind_speed",
             "clouds",
             "created_at",
-            "api_timestamp",
         )
         export_order = (
             "id",
@@ -449,7 +448,6 @@ class WeatherResource(resources.ModelResource):
             "wind_speed",
             "clouds",
             "created_at",
-            "api_timestamp",
         )
 
 
@@ -475,6 +473,7 @@ class WeatherAdmin(ImportExportModelAdmin):
     search_fields = ("city_name", "weather_description", "weather_main")
     readonly_fields = (
         "created_at",
+        "updated_at",
         "api_timestamp",
         "temperature_display",
         "fahrenheit_display",
@@ -483,6 +482,7 @@ class WeatherAdmin(ImportExportModelAdmin):
     show_full_result_count = False
 
     def changelist_view(self, request, extra_context=None):
+        """Override changelist view to add custom context."""
         extra_context = extra_context or {}
         extra_context['show_fetch_button'] = True
         return super().changelist_view(request, extra_context=extra_context)
@@ -523,13 +523,15 @@ class WeatherAdmin(ImportExportModelAdmin):
 
     def temperature_display(self, obj):
         """Display temperature in Celsius."""
-        return f"{obj.celsius_temperature()}°C"
+        return f"{obj.temperature_celsius}°C"
+
     temperature_display.short_description = "Temperature"
     temperature_display.admin_order_field = "temperature"
 
     def fahrenheit_display(self, obj):
         """Display temperature in Fahrenheit."""
-        return f"{obj.fahrenheit_temperature()}°F"
+        return f"{obj.temperature_fahrenheit}°F"
+
     fahrenheit_display.short_description = "Temperature (F)"
 
     actions = ["delete_old_records"]

@@ -1,3 +1,4 @@
 # flake8: noqa: E401
 
-from .models import Movie, MovieCategory, Author, Weather
+from .models import Movie, MovieCategory, Author
+from .weather import Weather

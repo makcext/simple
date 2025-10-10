@@ -1,17 +1,46 @@
-from datetime import date, datetime
+from datetime import date
+
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
-from django.utils import timezone
-from django.core.exceptions import ValidationError
 
 
 class MovieCategory(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    description = models.TextField(blank=True)
-    slug = models.SlugField(unique=True, max_length=100)
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    """
+    Model for movie categories.
+
+    Allows classification of movies by various genres and types.
+    """
+
+    name = models.CharField(
+        verbose_name="Name",
+        max_length=100,
+        unique=True,
+        help_text="Category name (e.g. Action, Drama, Comedy)",
+    )
+    description = models.TextField(
+        verbose_name="Description",
+        blank=True,
+        help_text="Description of this category",
+    )
+    slug = models.SlugField(
+        verbose_name="Slug",
+        unique=True,
+        max_length=100,
+        help_text="URL-friendly name",
+    )
+    is_active = models.BooleanField(
+        verbose_name="Active",
+        default=True,
+        help_text="Whether this category is active and should be displayed",
+    )
+    created_at = models.DateTimeField(
+        verbose_name="Created at",
+        auto_now_add=True,
+    )
+    updated_at = models.DateTimeField(
+        verbose_name="Updated at",
+        auto_now=True,
+    )
 
     class Meta:
         verbose_name = "Movie Category"
@@ -23,39 +52,107 @@ class MovieCategory(models.Model):
             models.Index(fields=["is_active"]),
         ]
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """
+        String representation of the category.
+
+        Returns:
+            str: The name of the category.
+        """
         return self.name
 
-    def clean(self):
+    def clean(self) -> None:
+        """Validate the model."""
         super().clean()
         if not self.slug and self.name:
             from django.utils.text import slugify
+
             self.slug = slugify(self.name)
 
 
 class Movie(models.Model):
-    title = models.CharField(max_length=255)
-    original_title = models.CharField(max_length=255, blank=True)
-    slug = models.SlugField(unique=True, max_length=255)
-    description = models.TextField(blank=True)
-    release_date = models.DateField(null=True, blank=True)
-    duration_minutes = models.PositiveIntegerField(
+    """Movie model.
+
+    Contains all information about a movie, including title, description,
+    rating, duration and relationship with category.
+    """
+
+    title = models.CharField(
+        verbose_name="Title",
+        max_length=255,
+        help_text="Movie title",
+    )
+    original_title = models.CharField(
+        verbose_name="Original Title",
+        max_length=255,
+        blank=True,
+        help_text="Original title if different from main title",
+    )
+    slug = models.SlugField(
+        verbose_name="Slug",
+        unique=True,
+        max_length=255,
+        help_text="URL-friendly title",
+    )
+    description = models.TextField(
+        verbose_name="Description",
+        blank=True,
+        help_text="Movie plot summary",
+    )
+    release_date = models.DateField(
+        verbose_name="Release Date",
         null=True,
         blank=True,
-        validators=[MinValueValidator(1), MaxValueValidator(600)]
+        help_text="Movie release date",
+    )
+    duration_minutes = models.PositiveIntegerField(
+        verbose_name="Duration (minutes)",
+        null=True,
+        blank=True,
+        validators=[
+            MinValueValidator(1, "Duration must be at least 1 minute"),
+            MaxValueValidator(600, "Duration cannot exceed 600 minutes"),
+        ],
+        help_text="Movie duration in minutes",
     )
     rating = models.DecimalField(
+        verbose_name="Rating",
         max_digits=3,
         decimal_places=1,
         null=True,
         blank=True,
-        validators=[MinValueValidator(0.0), MaxValueValidator(10.0)]
+        validators=[
+            MinValueValidator(0.0, "Rating cannot be less than 0"),
+            MaxValueValidator(10.0, "Rating cannot exceed 10"),
+        ],
+        help_text="Movie rating (0-10)",
     )
-    director = models.CharField(max_length=255, blank=True)
-    category = models.ForeignKey(MovieCategory, on_delete=models.PROTECT, related_name="movies")
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    director = models.CharField(
+        verbose_name="Director",
+        max_length=255,
+        blank=True,
+        help_text="Movie director",
+    )
+    category = models.ForeignKey(
+        MovieCategory,
+        verbose_name="Category",
+        on_delete=models.PROTECT,
+        related_name="movies",
+        help_text="Movie category",
+    )
+    is_active = models.BooleanField(
+        verbose_name="Active",
+        default=True,
+        help_text="Whether this movie is active",
+    )
+    created_at = models.DateTimeField(
+        verbose_name="Created at",
+        auto_now_add=True,
+    )
+    updated_at = models.DateTimeField(
+        verbose_name="Updated at",
+        auto_now=True,
+    )
 
     class Meta:
         verbose_name = "Movie"
@@ -70,36 +167,84 @@ class Movie(models.Model):
             models.Index(fields=["category"]),
         ]
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """String representation of the movie."""
         return self.title
 
-    def clean(self):
+    def clean(self) -> None:
+        """Validate the model."""
         super().clean()
         if not self.slug and self.title:
             from django.utils.text import slugify
+
             self.slug = slugify(self.title)
 
     @property
-    def get_category_name(self):
+    def get_category_name(self) -> str:
+        """Returns the name of the movie category."""
         return self.category.name if self.category else ""
 
     @property
-    def is_released(self):
+    def is_released(self) -> bool:
+        """Checks if the movie is released."""
         if not self.release_date:
             return False
         return self.release_date <= date.today()
 
 
 class Author(models.Model):
-    first_name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100)
-    biography = models.TextField(blank=True)
-    birth_date = models.DateField(null=True, blank=True)
-    death_date = models.DateField(null=True, blank=True)
-    nationality = models.CharField(max_length=100, blank=True)
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    """Model for authors.
+
+    Contains information about authors including their name,
+    biography, and birth date.
+    """
+
+    first_name = models.CharField(
+        verbose_name="First Name",
+        max_length=100,
+        help_text="Author's first name",
+    )
+    last_name = models.CharField(
+        verbose_name="Last Name",
+        max_length=100,
+        help_text="Author's last name",
+    )
+    biography = models.TextField(
+        verbose_name="Biography",
+        blank=True,
+        help_text="Author's biography",
+    )
+    birth_date = models.DateField(
+        verbose_name="Birth Date",
+        null=True,
+        blank=True,
+        help_text="Author's date of birth",
+    )
+    death_date = models.DateField(
+        verbose_name="Death Date",
+        null=True,
+        blank=True,
+        help_text="Author's date of death",
+    )
+    nationality = models.CharField(
+        verbose_name="Nationality",
+        max_length=100,
+        blank=True,
+        help_text="Author's nationality",
+    )
+    is_active = models.BooleanField(
+        verbose_name="Active",
+        default=True,
+        help_text="Whether this author is active",
+    )
+    created_at = models.DateTimeField(
+        verbose_name="Created at",
+        auto_now_add=True,
+    )
+    updated_at = models.DateTimeField(
+        verbose_name="Updated at",
+        auto_now=True,
+    )
 
     class Meta:
         verbose_name = "Author"
@@ -111,26 +256,83 @@ class Author(models.Model):
             models.Index(fields=["is_active"]),
         ]
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """String representation of the author."""
         return f"{self.first_name} {self.last_name}"
 
     @property
-    def full_name(self):
+    def full_name(self) -> str:
+        """Returns the full name of the author."""
         return f"{self.first_name} {self.last_name}"
 
 
 class Book(models.Model):
-    title = models.CharField(max_length=255)
-    original_title = models.CharField(max_length=255, blank=True)
-    slug = models.SlugField(unique=True, max_length=255)
-    description = models.TextField(blank=True)
-    publication_date = models.DateField(null=True, blank=True)
-    isbn = models.CharField(max_length=20, blank=True)
-    page_count = models.PositiveIntegerField(null=True, blank=True)
-    author = models.ForeignKey(Author, on_delete=models.PROTECT, related_name="books")
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    """Model for books.
+
+    Contains information about books including title, description,
+    publication date, and author.
+    """
+
+    title = models.CharField(
+        verbose_name="Title",
+        max_length=255,
+        help_text="Book title",
+    )
+    original_title = models.CharField(
+        verbose_name="Original Title",
+        max_length=255,
+        blank=True,
+        help_text="Original title if different",
+    )
+    slug = models.SlugField(
+        verbose_name="Slug",
+        unique=True,
+        max_length=255,
+        help_text="URL-friendly title",
+    )
+    description = models.TextField(
+        verbose_name="Description",
+        blank=True,
+        help_text="Book summary",
+    )
+    publication_date = models.DateField(
+        verbose_name="Publication Date",
+        null=True,
+        blank=True,
+        help_text="Book publication date",
+    )
+    isbn = models.CharField(
+        verbose_name="ISBN",
+        max_length=20,
+        blank=True,
+        help_text="International Standard Book Number",
+    )
+    page_count = models.PositiveIntegerField(
+        verbose_name="Page Count",
+        null=True,
+        blank=True,
+        help_text="Number of pages in the book",
+    )
+    author = models.ForeignKey(
+        Author,
+        verbose_name="Author",
+        on_delete=models.PROTECT,
+        related_name="books",
+        help_text="Book author",
+    )
+    is_active = models.BooleanField(
+        verbose_name="Active",
+        default=True,
+        help_text="Whether this book is active",
+    )
+    created_at = models.DateTimeField(
+        verbose_name="Created at",
+        auto_now_add=True,
+    )
+    updated_at = models.DateTimeField(
+        verbose_name="Updated at",
+        auto_now=True,
+    )
 
     class Meta:
         verbose_name = "Book"
@@ -144,99 +346,26 @@ class Book(models.Model):
             models.Index(fields=["author"]),
         ]
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """String representation of the book."""
         return self.title
 
-    def clean(self):
+    def clean(self) -> None:
+        """Validate the model."""
         super().clean()
         if not self.slug and self.title:
             from django.utils.text import slugify
+
             self.slug = slugify(self.title)
 
     @property
-    def get_author_name(self):
+    def get_author_name(self) -> str:
+        """Returns the full name of the book's author."""
         return str(self.author) if self.author else ""
 
     @property
-    def is_published(self):
+    def is_published(self) -> bool:
+        """Checks if the book is published."""
         if not self.publication_date:
             return False
         return self.publication_date <= date.today()
-
-
-class Weather(models.Model):
-    city_name = models.CharField(max_length=100)
-    country_code = models.CharField(max_length=10)
-    longitude = models.FloatField(validators=[MinValueValidator(-180.0), MaxValueValidator(180.0)])
-    latitude = models.FloatField(validators=[MinValueValidator(-90.0), MaxValueValidator(90.0)])
-    weather_id = models.IntegerField()
-    weather_main = models.CharField(max_length=50)
-    weather_description = models.CharField(max_length=100)
-    weather_icon = models.CharField(max_length=10)
-    temperature = models.FloatField(validators=[MinValueValidator(0.0)])
-    feels_like = models.FloatField(validators=[MinValueValidator(0.0)])
-    temp_min = models.FloatField(validators=[MinValueValidator(0.0)])
-    temp_max = models.FloatField(validators=[MinValueValidator(0.0)])
-    pressure = models.IntegerField(validators=[MinValueValidator(800), MaxValueValidator(1100)])
-    humidity = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(100)])
-    visibility = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0)])
-    wind_speed = models.FloatField(validators=[MinValueValidator(0.0)])
-    wind_degree = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(360)])
-    wind_gust = models.FloatField(null=True, blank=True, validators=[MinValueValidator(0.0)])
-    clouds = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(100)])
-    sunrise = models.DateTimeField()
-    sunset = models.DateTimeField()
-    api_timestamp = models.DateTimeField()
-    timezone_offset = models.IntegerField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    is_active = models.BooleanField(default=True)
-
-    class Meta:
-        verbose_name = "Weather Data"
-        verbose_name_plural = "Weather Data"
-        ordering = ["-created_at"]
-        indexes = [
-            models.Index(fields=["city_name"]),
-            models.Index(fields=["country_code"]),
-            models.Index(fields=["created_at"]),
-            models.Index(fields=["api_timestamp"]),
-            models.Index(fields=["is_active"]),
-            models.Index(fields=["weather_main"]),
-            models.Index(fields=["temperature"]),
-        ]
-
-    def __str__(self):
-        return f"{self.city_name} - {self.created_at.strftime('%Y-%m-%d %H:%M')}"
-
-    def celsius_temperature(self):
-        return round(self.temperature - 273.15, 1)
-
-    def fahrenheit_temperature(self):
-        return round((self.temperature - 273.15) * 9/5 + 32, 1)
-
-    def celsius_feels_like(self):
-        return round(self.feels_like - 273.15, 1)
-
-    def fahrenheit_feels_like(self):
-        return round((self.feels_like - 273.15) * 9/5 + 32, 1)
-
-    def visibility_km(self):
-        if self.visibility is not None:
-            return round(self.visibility / 1000, 1)
-        return None
-
-    @property
-    def is_current(self):
-        return (timezone.now() - self.created_at).total_seconds() < 3600
-
-    def clean(self):
-        super().clean()
-        if self.temp_min > self.temp_max:
-            raise ValidationError("Minimum temperature cannot be greater than maximum temperature")
-        if self.temp_min > self.temperature or self.temp_max < self.temperature:
-            raise ValidationError("Current temperature must be between minimum and maximum temperatures")
-
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        super().save(*args, **kwargs)
