@@ -481,45 +481,28 @@ class WeatherAdmin(ImportExportModelAdmin):
     list_per_page = 50
     show_full_result_count = False
 
-    def changelist_view(self, request, extra_context=None):
-        """Override changelist view to add custom context."""
-        extra_context = extra_context or {}
-        extra_context['show_fetch_button'] = True
-        return super().changelist_view(request, extra_context=extra_context)
+    actions = ["fetch_weather_action", "delete_old_records"]
 
-    def get_urls(self):
-        """Add custom URL for fetching weather data."""
-        urls = super().get_urls()
-        custom_urls = [
-            path('fetch-weather/', self.fetch_weather, name='fetch_weather'),
-        ]
-        return custom_urls + urls
-
-    def fetch_weather(self, request):
-        """Handler for fetch weather button."""
+    def fetch_weather_action(self, request, queryset):
+        """Admin action to fetch weather data."""
         success, message = get_weather_data()
 
         if success:
-            messages.success(request, message)
-            logger.info(
-                "Weather data fetched successfully",
-                extra={
-                    "user_id": request.user.id,
-                    "username": request.user.username,
-                },
-            )
+            self.message_user(request, message, messages.SUCCESS)
         else:
-            messages.error(request, message)
-            logger.error(
-                "Failed to fetch weather data",
-                extra={
-                    "user_id": request.user.id,
-                    "username": request.user.username,
-                    "error": message,
-                },
-            )
+            self.message_user(request, message, messages.ERROR)
 
-        return HttpResponseRedirect("../")
+    fetch_weather_action.short_description = "Get current weather data"
+
+    def get_actions(self, request):
+        """Override to show fetch action even with no objects."""
+        actions = super().get_actions(request)
+        actions['fetch_weather_action'] = (
+            WeatherAdmin.fetch_weather_action,
+            'fetch_weather_action',
+            "Get current weather data"
+        )
+        return actions
 
     def temperature_display(self, obj):
         """Display temperature in Celsius."""
@@ -533,8 +516,6 @@ class WeatherAdmin(ImportExportModelAdmin):
         return f"{obj.temperature_fahrenheit}°F"
 
     fahrenheit_display.short_description = "Temperature (F)"
-
-    actions = ["delete_old_records"]
 
     def delete_old_records(self, request, queryset):
         """Delete weather records older than 30 days."""
