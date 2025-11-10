@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 
@@ -102,7 +103,7 @@ class Weather(models.Model):
         verbose_name="Wind Degree",
         validators=[
             MinValueValidator(0, "Wind degree too low"),
-            MaxValueValidator(360, "Wind degree too high"),
+            MaxValueValidator(361, "Wind degree too high"),
         ],
         help_text="Wind direction in degrees",
     )
@@ -174,12 +175,14 @@ class Weather(models.Model):
         return round((self.temperature - 273.15) * 9/5 + 32, 2)
 
     @property
-    def temperature_celsius(self) -> float:
-        return self.temperature
+    def feels_like_celsius(self):
+        """Convert feels_like from Kelvin to Celsius."""
+        return round(self.feels_like - 273.15, 2)
 
     @property
-    def temperature_fahrenheit(self) -> float:
-        return round((self.temperature * 9/5) + 32, 1)
+    def feels_like_fahrenheit(self):
+        """Convert feels_like from Kelvin to Fahrenheit."""
+        return round((self.feels_like - 273.15) * 9/5 + 32, 2)
 
     def clean(self):
         """Validate the model."""

@@ -413,6 +413,7 @@ class MovieAdmin(NumericFilterModelAdmin):
     mark_as_inactive.short_description = "Mark selected movies as inactive"
 
 
+# Добавляем класс WeatherResource перед WeatherAdmin
 class WeatherResource(resources.ModelResource):
     """Resource for import/export of weather data."""
 
@@ -484,25 +485,58 @@ class WeatherAdmin(ImportExportModelAdmin):
     actions = ["fetch_weather_action", "delete_old_records"]
 
     def fetch_weather_action(self, request, queryset):
-        """Admin action to fetch weather data."""
+        """
+        Admin action to fetch current weather data.
+        This action works even when no specific records are selected.
+        """
         success, message = get_weather_data()
 
         if success:
             self.message_user(request, message, messages.SUCCESS)
+            logger.info(
+                "Weather data fetched successfully via admin action",
+                extra={
+                    "user_id": request.user.id,
+                    "username": request.user.username,
+                },
+            )
         else:
-            self.message_user(request, message, messages.ERROR)
+            self.message_user(request, f"Failed to fetch weather data: {message}", messages.ERROR)
+            logger.error(
+                "Failed to fetch weather data via admin action",
+                extra={
+                    "user_id": request.user.id,
+                    "username": request.user.username,
+                    "error": message,
+                },
+            )
 
-    fetch_weather_action.short_description = "Get current weather data"
+    fetch_weather_action.short_description = "📡 Get current weather data"
 
     def get_actions(self, request):
-        """Override to show fetch action even with no objects."""
+        """Override to ensure fetch_weather_action is always available."""
         actions = super().get_actions(request)
-        actions['fetch_weather_action'] = (
-            WeatherAdmin.fetch_weather_action,
-            'fetch_weather_action',
-            "Get current weather data"
-        )
+
+        # Ensure our custom action is properly configured
+        if 'fetch_weather_action' not in actions:
+            actions['fetch_weather_action'] = (
+                self.fetch_weather_action,
+                'fetch_weather_action',
+                self.fetch_weather_action.short_description
+            )
+
         return actions
+
+    def changelist_view(self, request, extra_context=None):
+        """Add custom context to changelist view."""
+        if extra_context is None:
+            extra_context = {}
+
+        # Add information about the action
+        extra_context['weather_action_available'] = True
+        extra_context['weather_action_description'] = "Use the action below to fetch current weather data"
+
+        return super().changelist_view(request, extra_context=extra_context)
 
     def temperature_display(self, obj):
         """Display temperature in Celsius."""
