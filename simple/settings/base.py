@@ -34,6 +34,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["simple.dev.intra", "localhost", "0.0.0.0", "127.0.0.1"]
 
+# OpenWeatherMap API settings
+OPENWEATHER_API_KEY = os.environ.get('OPENWEATHER_API_KEY', 'your_api_key_here')
 
 REST_FRAMEWORK = {
     "DATETIME_FORMAT": "%Y-%m-%dT%H:%M:%S.%fZ",
@@ -94,7 +96,7 @@ ROOT_URLCONF = "simple.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [os.path.join(BASE_DIR, 'templates')],  # Добавлена директория для глобальных шаблонов
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -235,3 +237,4 @@ DRAMATIQ_RESULT_BACKEND = {
 
 
 DRAMATIQ_TASKS_DATABASE = "default"
+OPENWEATHER_API_KEY = '8bf505cfa313a10d62328abdb5235e6d'
