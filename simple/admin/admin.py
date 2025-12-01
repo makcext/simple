@@ -413,7 +413,6 @@ class MovieAdmin(NumericFilterModelAdmin):
     mark_as_inactive.short_description = "Mark selected movies as inactive"
 
 
-# Добавляем класс WeatherResource перед WeatherAdmin
 class WeatherResource(resources.ModelResource):
     """Resource for import/export of weather data."""
 
@@ -459,7 +458,7 @@ class WeatherAdmin(ImportExportModelAdmin):
     resource_class = WeatherResource
     list_display = (
         "city_name",
-        "temperature_display",
+        "temperature_celsius_display",
         "weather_description",
         "humidity",
         "pressure",
@@ -476,19 +475,20 @@ class WeatherAdmin(ImportExportModelAdmin):
         "created_at",
         "updated_at",
         "api_timestamp",
-        "temperature_display",
-        "fahrenheit_display",
+        "temperature_celsius",
+        "temperature_fahrenheit",
+        "feels_like_celsius",
+        "feels_like_fahrenheit",
+        "temp_min",
+        "temp_max",
     )
     list_per_page = 50
     show_full_result_count = False
 
     actions = ["fetch_weather_action", "delete_old_records"]
 
-    def fetch_weather_action(self, request, queryset):
-        """
-        Admin action to fetch current weather data.
-        This action works even when no specific records are selected.
-        """
+    def fetch_weather_action(self, request, queryset=None):
+        """Admin action to fetch current weather data."""
         success, message = get_weather_data()
 
         if success:
@@ -511,50 +511,31 @@ class WeatherAdmin(ImportExportModelAdmin):
                 },
             )
 
-    fetch_weather_action.short_description = "📡 Get current weather data"
+        return HttpResponseRedirect(request.get_full_path())
 
-    def get_actions(self, request):
-        """Override to ensure fetch_weather_action is always available."""
-        actions = super().get_actions(request)
+    fetch_weather_action.short_description = "Get current weather data"
+    fetch_weather_action.allowed_permissions = ('change',)
 
-        # Ensure our custom action is properly configured
-        if 'fetch_weather_action' not in actions:
-            actions['fetch_weather_action'] = (
-                self.fetch_weather_action,
-                'fetch_weather_action',
-                self.fetch_weather_action.short_description
-            )
-
-        return actions
-
-    def changelist_view(self, request, extra_context=None):
-        """Add custom context to changelist view."""
-        if extra_context is None:
-            extra_context = {}
-
-        # Add information about the action
-        extra_context['weather_action_available'] = True
-        extra_context['weather_action_description'] = "Use the action below to fetch current weather data"
-
-        return super().changelist_view(request, extra_context=extra_context)
-
-    def temperature_display(self, obj):
+    def temperature_celsius_display(self, obj):
         """Display temperature in Celsius."""
         return f"{obj.temperature_celsius}°C"
 
-    temperature_display.short_description = "Temperature"
-    temperature_display.admin_order_field = "temperature"
+    temperature_celsius_display.short_description = "Temperature"
+    temperature_celsius_display.admin_order_field = "temperature"
 
-    def fahrenheit_display(self, obj):
+    def temperature_fahrenheit_display(self, obj):
         """Display temperature in Fahrenheit."""
         return f"{obj.temperature_fahrenheit}°F"
 
-    fahrenheit_display.short_description = "Temperature (F)"
+    temperature_fahrenheit_display.short_description = "Temperature (F)"
 
     def delete_old_records(self, request, queryset):
         """Delete weather records older than 30 days."""
         from django.utils import timezone
         from datetime import timedelta
+
+        if not queryset.exists():
+            queryset = self.get_queryset(request)
 
         cutoff_date = timezone.now() - timedelta(days=30)
         old_records = queryset.filter(created_at__lt=cutoff_date)
@@ -583,3 +564,34 @@ class WeatherAdmin(ImportExportModelAdmin):
             )
 
     delete_old_records.short_description = "Delete records older than 30 days"
+
+    def get_actions(self, request):
+        """Override to ensure actions are properly configured."""
+        actions = super().get_actions(request)
+
+        if 'fetch_weather_action' in actions:
+            def fetch_wrapper(modeladmin, request, queryset):
+                return self.fetch_weather_action(request, queryset)
+
+            fetch_wrapper.short_description = "Get current weather data"
+            fetch_wrapper.allowed_permissions = ('change',)
+
+            actions['fetch_weather_action'] = (
+                fetch_wrapper,
+                'fetch_weather_action',
+                "Get current weather data"
+            )
+
+        return actions
+
+    def changelist_view(self, request, extra_context=None):
+        """Custom changelist view to handle actions without selection."""
+        if request.method == 'POST':
+            if 'action' in request.POST and request.POST['action'] == 'fetch_weather_action':
+                return self.fetch_weather_action(request, None)
+
+        return super().changelist_view(request, extra_context)
+
+    def has_fetch_weather_permission(self, request):
+        """Check if user has permission to fetch weather."""
+        return request.user.has_perm('simple.change_weather')
