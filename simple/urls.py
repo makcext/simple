@@ -85,6 +85,6 @@ urlpatterns = (
         # Django Debug Toolbar
         path("__debug__/", include("debug_toolbar.urls")),
     ]
-    + jwt_urlpatterns # noqa: W503
-    + swager_urlpatterns # noqa: W503
+    + jwt_urlpatterns  # noqa: W503
+    + swager_urlpatterns  # noqa: W503
 )
