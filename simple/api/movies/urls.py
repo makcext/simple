@@ -1,25 +1,29 @@
-from django.urls import include, path, re_path
+from django.urls import include, re_path
 from rest_framework import routers
 
-from simple.api.movies.views.root import MovieCategoryListView, MovieCategoryByIdView, NextActiveMovieView
+from simple.api.movies.views.root import (
+    MovieCategoryListView,
+    MovieCategoryByIdView,
+    NextActiveMovieView,
+)
 
 router = routers.DefaultRouter()
 
 urlpatterns = [
-  re_path(
-    r"^movies-category/$",
-    MovieCategoryListView.as_view(),
-    name="movie-category-list",
-  ),
-  re_path(
+    re_path(
+        r"^movies-category/$",
+        MovieCategoryListView.as_view(),
+        name="movie-category-list",
+    ),
+    re_path(
         r"^movies-category/(?P<id>\d+)/$",
         MovieCategoryByIdView.as_view(),
         name="movie-category-detail",
     ),
-  re_path(
+    re_path(
         r"^movies/next-active/$",
         NextActiveMovieView.as_view(),
         name="next-active-movie",
-  ),
-  re_path(r"", include(router.urls)),
+    ),
+    re_path(r"", include(router.urls)),
 ]

@@ -1,5 +1,4 @@
 from rest_framework import serializers
-from simple.models import Movie, MovieCategory
 
 
 class MovieCategorySerializer(serializers.Serializer):

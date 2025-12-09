@@ -9,7 +9,7 @@ from simple.models.models import Book
 from simple.api.library.serializers.root import (
     AuthorSerializer,
     AuthorFieldsSerializer,
-    BookSerializer
+    BookSerializer,
 )
 
 
@@ -17,6 +17,7 @@ class AuthorListView(APIView):
     """
     API endpoint for authors
     """
+
     serializer_class = AuthorSerializer
     parser_classes = [JSONParser, FormParser]
 
@@ -40,6 +41,7 @@ class AuthorByIdView(APIView):
     """
     Retrieve an author by its ID with all fields.
     """
+
     serializer_class = AuthorFieldsSerializer
     parser_classes = [JSONParser, FormParser]
 
@@ -81,6 +83,7 @@ class AuthorBooksView(APIView):
     """
     Retrieve all books of an author by author ID.
     """
+
     serializer_class = BookSerializer
     parser_classes = [JSONParser, FormParser]
 

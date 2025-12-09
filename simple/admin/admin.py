@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.db.models import Count
 from django.http import HttpResponseRedirect
-from django.urls import path
 from django.contrib import messages
 
 from admin_auto_filters.filters import AutocompleteFilter
@@ -417,7 +416,9 @@ class WeatherResource(resources.ModelResource):
     """Resource for import/export of weather data."""
 
     temperature_celsius = Field(attribute="temperature_celsius", column_name="Temperature (°C)")
-    temperature_fahrenheit = Field(attribute="temperature_fahrenheit", column_name="Temperature (°F)")
+    temperature_fahrenheit = Field(
+        attribute="temperature_fahrenheit", column_name="Temperature (°F)"
+    )
 
     class Meta:
         model = Weather
@@ -501,7 +502,9 @@ class WeatherAdmin(ImportExportModelAdmin):
                 },
             )
         else:
-            self.message_user(request, f"Failed to fetch weather data: {message}", messages.ERROR)
+            self.message_user(
+                request, f"Failed to fetch weather data: {message}", messages.ERROR
+            )
             logger.error(
                 "Failed to fetch weather data via admin action",
                 extra={
@@ -514,7 +517,7 @@ class WeatherAdmin(ImportExportModelAdmin):
         return HttpResponseRedirect(request.get_full_path())
 
     fetch_weather_action.short_description = "Get current weather data"
-    fetch_weather_action.allowed_permissions = ('change',)
+    fetch_weather_action.allowed_permissions = ("change",)
 
     def temperature_celsius_display(self, obj):
         """Display temperature in Celsius."""
@@ -569,29 +572,30 @@ class WeatherAdmin(ImportExportModelAdmin):
         """Override to ensure actions are properly configured."""
         actions = super().get_actions(request)
 
-        if 'fetch_weather_action' in actions:
+        if "fetch_weather_action" in actions:
+
             def fetch_wrapper(modeladmin, request, queryset):
                 return self.fetch_weather_action(request, queryset)
 
             fetch_wrapper.short_description = "Get current weather data"
-            fetch_wrapper.allowed_permissions = ('change',)
+            fetch_wrapper.allowed_permissions = ("change",)
 
-            actions['fetch_weather_action'] = (
+            actions["fetch_weather_action"] = (
                 fetch_wrapper,
-                'fetch_weather_action',
-                "Get current weather data"
+                "fetch_weather_action",
+                "Get current weather data",
             )
 
         return actions
 
     def changelist_view(self, request, extra_context=None):
         """Custom changelist view to handle actions without selection."""
-        if request.method == 'POST':
-            if 'action' in request.POST and request.POST['action'] == 'fetch_weather_action':
+        if request.method == "POST":
+            if "action" in request.POST and request.POST["action"] == "fetch_weather_action":
                 return self.fetch_weather_action(request, None)
 
         return super().changelist_view(request, extra_context)
 
     def has_fetch_weather_permission(self, request):
         """Check if user has permission to fetch weather."""
-        return request.user.has_perm('simple.change_weather')
+        return request.user.has_perm("simple.change_weather")

@@ -37,9 +37,7 @@ from rest_framework import routers
 class SchemaGenerator(OpenAPISchemaGenerator):
     def get_schema(self, request=None, public=False):
         schema = super(SchemaGenerator, self).get_schema(request, public)
-        schema.schemes = (
-            ["http", "https"] if settings.ENV == "development" else ["https"]
-        )
+        schema.schemes = ["http", "https"] if settings.ENV == "development" else ["https"]
 
         return schema
 
@@ -87,6 +85,6 @@ urlpatterns = (
         # Django Debug Toolbar
         path("__debug__/", include("debug_toolbar.urls")),
     ]
-    + jwt_urlpatterns
-    + swager_urlpatterns
+    + jwt_urlpatterns # noqa: W503
+    + swager_urlpatterns # noqa: W503
 )

@@ -7,13 +7,20 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('simple', '0001_initial'),
+        ("simple", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='weather',
-            name='wind_degree',
-            field=models.IntegerField(help_text='Wind direction in degrees', validators=[django.core.validators.MinValueValidator(0, 'Wind degree too low'), django.core.validators.MaxValueValidator(361, 'Wind degree too high')], verbose_name='Wind Degree'),
+            model_name="weather",
+            name="wind_degree",
+            field=models.IntegerField(
+                help_text="Wind direction in degrees",
+                validators=[
+                    django.core.validators.MinValueValidator(0, "Wind degree too low"),
+                    django.core.validators.MaxValueValidator(361, "Wind degree too high"),
+                ],
+                verbose_name="Wind Degree",
+            ),
         ),
     ]

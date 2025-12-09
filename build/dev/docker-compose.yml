@@ -12,6 +12,8 @@ services:
       # - RABBITMQ_URL=amqp://simple:simple@rabbitmq:5672
     depends_on:
       - simple-db
+      - simple-redis
+      - simple-apscheduler
       # - rabbitmq
     ports:
       - "8000:8000" # Main app port
@@ -20,7 +22,7 @@ services:
       - "3003:3003" # Debugger for Managment Commands
       - "8080:8080" # Profiler
     volumes:
-      - type : bind
+      - type: bind
         source: ../../
         target: /app
     networks:
@@ -47,11 +49,52 @@ services:
       - "5432:5432"
 
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "simple"]
+      test: [ "CMD", "pg_isready", "-U", "simple" ]
       interval: 5s
       timeout: 10s
       retries: 3
 
+  simple-redis:
+    image: redis:7.4.1-alpine
+    container_name: simple-redis
+    env_file: .env
+    restart: unless-stopped
+    environment:
+      - CONTAINER_NAME=simple-redis
+    networks:
+      - simple-network
+    volumes:
+      - ../../volumes/redis/:/data/
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: curl -sS localhost:6379 || echo 1
+      interval: 5s
+      timeout: 10s
+      retries: 3
+
+  simple-apscheduler:
+    image: simple:latest
+    container_name: simple-apscheduler
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - CONTAINER_NAME=simple-apscheduler
+    depends_on:
+      - simple-db
+      - simple-redis
+    volumes:
+      - type: bind
+        source: ../../
+        target: /app
+    networks:
+      - simple-network
+    command:
+      - /bin/bash
+      - -c
+      - |
+        python manage.py migrate --settings=simple.settings.development
+        python manage.py runapscheduler --settings=simple.settings.development
   # simple-dramatiq:
   #   image: simple:latest
   #   container_name: simple-dramatiq

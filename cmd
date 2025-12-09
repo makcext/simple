@@ -3,11 +3,11 @@ case $1 in
     docker compose -f build/dev/docker-compose.yml -p simple build --no-cache
     ;;
   start)
-    docker compose -f build/dev/docker-compose.yml -p simple up -d simple
+    docker compose -f build/dev/docker-compose.yml -p simple up -d --build simple simple-apscheduler
     ;;
   restart)
     docker compose -f build/dev/docker-compose.yml -p simple down
-    docker compose -f build/dev/docker-compose.yml -p simple up -d simple
+    docker compose -f build/dev/docker-compose.yml -p simple up -d --build simple simple-apscheduler
     ;;
 
   stop)
