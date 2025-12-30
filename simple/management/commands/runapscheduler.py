@@ -9,13 +9,11 @@ from django_apscheduler.jobstores import DjangoJobStore
 from django_apscheduler.models import DjangoJobExecution
 from django_dramatiq.tasks import delete_old_tasks
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+from simple.processes.get_weather import get_weather_data
+
 logger = logging.getLogger(__name__)
 
 
-# The `close_old_connections` decorator ensures that database connections, that have become
-# unusable or are obsolete, are closed before and after your job has run. You should use it
-# to wrap any jobs that you schedule that access the Django database in any way.
 @util.close_old_connections
 def delete_old_job_executions(max_age=1_209_600):
     """
@@ -35,39 +33,19 @@ def fetch_weather_data():
     """
     Fetch weather data from OpenWeatherMap API and save to database.
     """
-    logger.info(" START fetch_weather_data job")
+    logger.info("Starting weather data fetch job...")
+    success, message = get_weather_data()
 
-    try:
-        logger.info("1. Attempting to import get_weather_data...")
-        from simple.processes.get_weather import get_weather_data
-        logger.info("Import successful")
-
-        logger.info("2. Calling get_weather_data() function...")
-        success, message = get_weather_data()
-
-        if success:
-            logger.info(f"Weather data fetch **successful**: {message}")
-        else:
-            logger.error(f"Weather data fetch **failed**: {message}")
-
-    except ImportError as e:
-        logger.error(f"Failed to import get_weather module: {str(e)}")
-        import traceback
-        logger.error(traceback.format_exc())
-    except Exception as e:
-        logger.error(f"Unexpected error in weather fetch job: {str(e)}")
-        import traceback
-        logger.error(traceback.format_exc())
-
-    logger.info("END fetch_weather_data job ")
+    if success:
+        logger.info(f"Weather data fetch successful: {message}")
+    else:
+        logger.error(f"Weather data fetch failed: {message}")
 
 
 class Command(BaseCommand):
     help = "Runs APScheduler."
 
     def handle(self, *args, **options):
-        logger.info("Initializing APScheduler...")
-
         scheduler = BlockingScheduler(timezone=settings.TIME_ZONE)
         scheduler.add_jobstore(DjangoJobStore(), "default")
 
@@ -89,7 +67,7 @@ class Command(BaseCommand):
             max_instances=1,
             replace_existing=True,
         )
-        logger.info("Added periodic job every 5 minutes 'fetch_weather_data'.")
+        logger.info("Added periodic job (every 5 minutes): 'fetch_weather_data'.")
 
         try:
             logger.info("Starting scheduler...")
@@ -97,4 +75,4 @@ class Command(BaseCommand):
         except KeyboardInterrupt:
             logger.info("Stopping scheduler...")
             scheduler.shutdown()
-            logger.info("Scheduler shuted down.")
+            logger.info("Scheduler shut down successfully!")
