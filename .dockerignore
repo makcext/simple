@@ -23,6 +23,7 @@
 **/secrets.dev.yaml
 **/values.dev.yaml
 **/.coverage
+**/volumes
 
 **/.pre-commit-config.yaml
 **/.gitattributes

@@ -9,12 +9,11 @@ from django_apscheduler.jobstores import DjangoJobStore
 from django_apscheduler.models import DjangoJobExecution
 from django_dramatiq.tasks import delete_old_tasks
 
+from simple.processes.get_weather import get_weather_data
+
 logger = logging.getLogger(__name__)
 
 
-# The `close_old_connections` decorator ensures that database connections, that have become
-# unusable or are obsolete, are closed before and after your job has run. You should use it
-# to wrap any jobs that you schedule that access the Django database in any way.
 @util.close_old_connections
 def delete_old_job_executions(max_age=1_209_600):
     """
@@ -29,6 +28,20 @@ def delete_old_job_executions(max_age=1_209_600):
     delete_old_tasks(max_age)
 
 
+@util.close_old_connections
+def fetch_weather_data():
+    """
+    Fetch weather data from OpenWeatherMap API and save to database.
+    """
+    logger.info("Starting weather data fetch job...")
+    success, message = get_weather_data()
+
+    if success:
+        logger.info(f"Weather data fetch successful: {message}")
+    else:
+        logger.error(f"Weather data fetch failed: {message}")
+
+
 class Command(BaseCommand):
     help = "Runs APScheduler."
 
@@ -40,12 +53,21 @@ class Command(BaseCommand):
             delete_old_job_executions,
             trigger=CronTrigger(
                 day_of_week="mon", hour="00", minute="00"
-            ),  # Midnight on Monday, before start of the next work week.
+            ),
             id="delete_old_job_executions",
             max_instances=1,
             replace_existing=True,
         )
         logger.info("Added weekly job: 'delete_old_job_executions'.")
+
+        scheduler.add_job(
+            fetch_weather_data,
+            trigger=CronTrigger(minute="*/5"),
+            id="fetch_weather_data",
+            max_instances=1,
+            replace_existing=True,
+        )
+        logger.info("Added periodic job (every 5 minutes): 'fetch_weather_data'.")
 
         try:
             logger.info("Starting scheduler...")
